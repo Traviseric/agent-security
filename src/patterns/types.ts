@@ -11,6 +11,27 @@
 export type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 /**
+ * Finding classification — WHY this finding exists
+ */
+export type FindingClassification =
+  | 'test_payload'           // Intentional attack payload in test/security tool
+  | 'live_vulnerability'     // Real exploitable vulnerability in production code
+  | 'credential_exposure'    // Hardcoded or leaked credential
+  | 'configuration_risk'     // Insecure configuration setting
+  | 'architectural_weakness' // Structural design flaw in agent architecture
+  | 'supply_chain_risk'      // Dependency or package integrity concern
+  | 'unclassified';          // Default — not yet classified
+
+/**
+ * Taint proximity — how close a dangerous sink is to untrusted input
+ */
+export type TaintProximity =
+  | 'direct'    // User input flows directly into sink (same line or assignment)
+  | 'nearby'    // User input source is within 10 lines of sink
+  | 'distant'   // Sink exists but no nearby user input detected
+  | 'unknown';  // Could not determine
+
+/**
  * Attack categories based on research sources
  */
 export type AttackCategory =
@@ -157,6 +178,18 @@ export interface Finding {
   context: string;
   /** Timestamp */
   timestamp: Date;
+  /** Auto-classification of why this finding exists */
+  classification: FindingClassification;
+  /** Original severity before any contextual adjustment */
+  originalSeverity: Severity;
+  /** Whether severity was downgraded (e.g., test file) */
+  severityDowngraded: boolean;
+  /** Whether this finding is in a test file */
+  isTestFile: boolean;
+  /** Taint proximity for dangerous sink patterns */
+  taintProximity?: TaintProximity;
+  /** Context flow chain (for architectural findings) */
+  contextFlowChain?: string[];
 }
 
 /**

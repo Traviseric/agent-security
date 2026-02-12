@@ -93,14 +93,14 @@ export const argumentInjectionPatterns: DetectionPattern[] = [
 export const missingArgSeparatorPatterns: DetectionPattern[] = [
   {
     name: 'missing_arg_separator_template',
-    pattern: /\$\{?(?:USER_INPUT|QUERY|ARG|INPUT|PARAM)\}?(?!\s+--)/,
+    pattern: /(?:exec|spawn|system|popen|run|shell)\s*\(.*\$\{?(?:USER_INPUT|QUERY|ARG|INPUT|PARAM)\}?(?!\s+--)/i,
     severity: 'high',
     category: 'argument_injection',
     source: 'THR-006',
-    context: 'command_template',
-    description: 'User input without argument separator (--)',
-    example: 'cmd $USER_INPUT (should be cmd -- $USER_INPUT)',
-    remediation: 'Always use -- separator before user input in commands',
+    context: 'code',
+    description: 'User input in shell command without argument separator (--)',
+    example: 'exec(`cmd ${USER_INPUT}`) → exec(`cmd -- ${USER_INPUT}`)',
+    remediation: 'Always use -- separator before user input in shell commands',
   },
   {
     name: 'flag_like_input',
