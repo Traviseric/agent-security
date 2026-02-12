@@ -1,6 +1,6 @@
 {
   "name": "@empowered-humanity/agent-security",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Security scanner for AI agent architectures - 176 detection patterns for prompt injection, credential exposure, MCP security, and OWASP ASI vulnerabilities",
   "type": "module",
   "main": "dist/index.js",
