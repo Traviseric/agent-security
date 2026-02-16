@@ -1,0 +1,85 @@
+name: 'Agent Security Scan'
+description: 'Scan for AI agent security vulnerabilities with 176+ detection patterns'
+author: 'Empowered Humanity'
+
+inputs:
+  path:
+    description: 'Path to scan'
+    required: false
+    default: '.'
+  severity:
+    description: 'Minimum severity to report (critical, high, medium, low)'
+    required: false
+    default: 'medium'
+  format:
+    description: 'Output format (console, json, sarif)'
+    required: false
+    default: 'sarif'
+  fail-on-findings:
+    description: 'Fail if findings at or above this severity (critical, high, medium, low)'
+    required: false
+    default: 'high'
+  upload-sarif:
+    description: 'Upload SARIF results to GitHub Code Scanning'
+    required: false
+    default: 'true'
+
+outputs:
+  findings-count:
+    description: 'Total number of findings'
+    value: ${{ steps.scan.outputs.findings-count }}
+  risk-level:
+    description: 'Overall risk level'
+    value: ${{ steps.scan.outputs.risk-level }}
+  sarif-file:
+    description: 'Path to SARIF output file'
+    value: ${{ steps.scan.outputs.sarif-file }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Run Agent Security Scan
+      id: scan
+      shell: bash
+      run: |
+        SARIF_FILE="${{ runner.temp }}/agent-security-results.sarif"
+
+        npx --yes @empowered-humanity/agent-security@latest scan \
+          ${{ inputs.path }} \
+          --severity ${{ inputs.severity }} \
+          --format ${{ inputs.format }} \
+          --fail-on ${{ inputs.fail-on-findings }} \
+          --output "$SARIF_FILE" \
+          || SCAN_EXIT=$?
+
+        if [ -f "$SARIF_FILE" ]; then
+          FINDINGS=$(cat "$SARIF_FILE" | node -e "
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync(0, 'utf8'));
+            console.log(data.runs[0].results.length);
+          ")
+          echo "findings-count=$FINDINGS" >> $GITHUB_OUTPUT
+          echo "sarif-file=$SARIF_FILE" >> $GITHUB_OUTPUT
+        else
+          echo "findings-count=0" >> $GITHUB_OUTPUT
+          echo "sarif-file=" >> $GITHUB_OUTPUT
+        fi
+
+        echo "risk-level=${SCAN_EXIT:+failed}" >> $GITHUB_OUTPUT
+        exit ${SCAN_EXIT:-0}
+
+    - name: Upload SARIF to GitHub Code Scanning
+      if: ${{ inputs.upload-sarif == 'true' && always() && steps.scan.outputs.sarif-file != '' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif-file }}
+        category: agent-security
+
+branding:
+  icon: 'shield'
+  color: 'blue'

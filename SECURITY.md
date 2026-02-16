@@ -59,7 +59,7 @@ When using agent-security in your projects:
 
 ## Security Features
 
-- **Pattern-based detection**: 176 security patterns with 4 intelligence layers
+- **Pattern-based detection**: 190 security patterns with 4 intelligence layers
 - **OWASP ASI coverage**: All 10 OWASP Agentic Security Issues
 - **No network calls**: All scanning happens locally
 - **No data collection**: Your code never leaves your machine

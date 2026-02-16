@@ -1,7 +1,7 @@
 /**
  * Agent Security Pattern Library
  *
- * Comprehensive collection of 175+ detection patterns for AI agent security
+ * Comprehensive collection of 190 detection patterns for AI agent security
  * scanning, compiled from 19+ authoritative research sources.
  *
  * Pattern Categories:
@@ -101,6 +101,7 @@ export function getPatternStats(): {
   total: number;
   bySeverity: Record<Severity, number>;
   byCategory: Record<string, number>;
+  byOwaspAsi: Record<string, number>;
 } {
   const stats = {
     total: ALL_PATTERNS.length,
@@ -111,11 +112,15 @@ export function getPatternStats(): {
       low: 0,
     } as Record<Severity, number>,
     byCategory: {} as Record<string, number>,
+    byOwaspAsi: {} as Record<string, number>,
   };
 
   for (const pattern of ALL_PATTERNS) {
     stats.bySeverity[pattern.severity]++;
     stats.byCategory[pattern.category] = (stats.byCategory[pattern.category] || 0) + 1;
+    if (pattern.owaspAsi) {
+      stats.byOwaspAsi[pattern.owaspAsi] = (stats.byOwaspAsi[pattern.owaspAsi] || 0) + 1;
+    }
   }
 
   return stats;

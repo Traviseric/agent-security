@@ -4,14 +4,14 @@
 [![npm version](https://img.shields.io/npm/v/@empowered-humanity/agent-security)](https://www.npmjs.com/package/@empowered-humanity/agent-security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-116%20passing-brightgreen.svg)]()
-[![Patterns](https://img.shields.io/badge/Patterns-176-navy.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-123%20passing-brightgreen.svg)]()
+[![Patterns](https://img.shields.io/badge/Patterns-190-navy.svg)]()
 
 Security scanner for AI agent architectures. Detects prompt injection, credential exposure, code injection, and agent-specific attack patterns.
 
 ## What It Detects
 
-**176 detection patterns** across 5 scanner categories:
+**190 detection patterns** across 5 scanner categories:
 
 ### 1. Prompt Injection (34 patterns)
 - Instruction override attempts
@@ -61,16 +61,16 @@ The scanner implements detection for all 10 OWASP Agentic Security Issues:
 
 | OWASP ASI | Category | Patterns | Description |
 |-----------|----------|----------|-------------|
-| **ASI01** | Goal Hijacking | 2 | Malicious objectives override primary goals |
-| **ASI02** | Tool Misuse | 1 | Unauthorized tool access or API abuse |
-| **ASI03** | Privilege Abuse | 2 | Escalation beyond granted permissions |
-| **ASI04** | Supply Chain | 1 | Compromised dependencies or data sources |
-| **ASI05** | Remote Code Execution | 1 | Command injection, arbitrary code execution |
-| **ASI06** | Memory Poisoning | 2 | RAG corruption, persistent instruction injection |
-| **ASI07** | Insecure Communications | 1 | Unencrypted channels, data exfiltration |
-| **ASI08** | Cascading Failures | 2 | Error amplification, chain-reaction exploits |
-| **ASI09** | Trust Exploitation | 2 | Impersonation, false credentials |
-| **ASI10** | Rogue Agents | 2 | Self-replication, unauthorized spawning |
+| **ASI01** | Goal Hijacking | 6 | Malicious objectives override primary goals |
+| **ASI02** | Tool Misuse | 5 | Unauthorized tool access or API abuse |
+| **ASI03** | Privilege Abuse | 4 | Escalation beyond granted permissions |
+| **ASI04** | Supply Chain | 3 | Compromised dependencies or data sources |
+| **ASI05** | Remote Code Execution | 3 | Command injection, arbitrary code execution |
+| **ASI06** | Memory Poisoning | 10 | RAG corruption, persistent instruction injection, unicode hidden, embedding drift |
+| **ASI07** | Insecure Communications | 9 | Unencrypted channels, data exfiltration, message replay |
+| **ASI08** | Cascading Failures | 9 | Error amplification, chain-reaction exploits, circuit breaker bypass |
+| **ASI09** | Trust Exploitation | 8 | Impersonation, false credentials, YMYL decision override |
+| **ASI10** | Rogue Agents | 8 | Self-replication, unauthorized spawning, behavioral drift, silent approval |
 
 ## Installation
 
@@ -183,7 +183,7 @@ security_scan:
 
 ## Pattern Categories
 
-The 176 patterns are organized into these categories:
+The 190 patterns are organized into these categories:
 
 | Category | Count | Severity |
 |----------|-------|----------|

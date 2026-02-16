@@ -1,0 +1,7 @@
+- id: agent-security-scan
+  name: Agent Security Scan
+  description: Scan for AI agent security vulnerabilities
+  entry: npx --yes @empowered-humanity/agent-security scan
+  language: system
+  pass_filenames: false
+  always_run: true
