@@ -1,5 +1,5 @@
 name: 'Agent Security Scan'
-description: 'Scan for AI agent security vulnerabilities with 176+ detection patterns'
+description: 'Scan for AI agent security vulnerabilities with 190+ detection patterns covering OWASP ASI Top 10, MCP security, and credential exposure'
 author: 'Empowered Humanity'
 
 inputs:

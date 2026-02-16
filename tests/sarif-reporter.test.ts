@@ -61,7 +61,7 @@ describe('SARIF Reporter', () => {
     expect(sarif.version).toBe('2.1.0');
     expect(sarif.runs).toHaveLength(1);
     expect(sarif.runs[0].tool.driver.name).toBe('agent-security');
-    expect(sarif.runs[0].tool.driver.semanticVersion).toBe('1.1.0');
+    expect(sarif.runs[0].tool.driver.semanticVersion).toBe('1.2.0');
   });
 
   it('maps critical/high to error, medium to warning, low to note', () => {
@@ -109,6 +109,47 @@ describe('SARIF Reporter', () => {
     expect(props.taintProximity).toBe('direct');
     expect(props.owaspAsi).toBe('ASI-01');
     expect(props.contextFlowChain).toEqual(['source', 'sink']);
+  });
+
+  it('maps attack categories to CWE IDs in rule properties', () => {
+    const finding = makeFinding({
+      pattern: makePattern({ category: 'credential_exposure', name: 'cred-test' }),
+    });
+    const result = makeScanResult([finding]);
+    const sarif = JSON.parse(formatAsSarif(result));
+    const rule = sarif.runs[0].tool.driver.rules[0];
+
+    expect(rule.properties.cweId).toBe('CWE-798');
+    expect(rule.properties.tags).toContain('CWE-798');
+    expect(rule.properties.tags).toContain('security');
+    expect(rule.helpUri).toBe('https://cwe.mitre.org/data/definitions/798.html');
+  });
+
+  it('includes OWASP ASI tag in rule tags', () => {
+    const finding = makeFinding({
+      pattern: makePattern({ category: 'ASI01_goal_hijack', owaspAsi: 'ASI01', name: 'asi-test' }),
+    });
+    const result = makeScanResult([finding]);
+    const sarif = JSON.parse(formatAsSarif(result));
+    const rule = sarif.runs[0].tool.driver.rules[0];
+
+    expect(rule.properties.tags).toContain('CWE-74');
+    expect(rule.properties.tags).toContain('OWASP-ASI01');
+    expect(rule.properties.owaspAsi).toBe('ASI01');
+  });
+
+  it('includes remediation as fullDescription when available', () => {
+    const finding = makeFinding({
+      pattern: makePattern({
+        name: 'remed-test',
+        remediation: 'Use environment variables for secrets',
+      }),
+    });
+    const result = makeScanResult([finding]);
+    const sarif = JSON.parse(formatAsSarif(result));
+    const rule = sarif.runs[0].tool.driver.rules[0];
+
+    expect(rule.fullDescription.text).toBe('Use environment variables for secrets');
   });
 
   it('produces zero results for empty findings', () => {

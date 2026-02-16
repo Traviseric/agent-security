@@ -4,10 +4,49 @@
 [![npm version](https://img.shields.io/npm/v/@empowered-humanity/agent-security)](https://www.npmjs.com/package/@empowered-humanity/agent-security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-123%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-126%20passing-brightgreen.svg)]()
 [![Patterns](https://img.shields.io/badge/Patterns-190-navy.svg)]()
 
-Security scanner for AI agent architectures. Detects prompt injection, credential exposure, code injection, and agent-specific attack patterns.
+Static analysis security scanner purpose-built for AI agent architectures. Detects prompt injection, credential exposure, MCP server misconfigurations, code injection, and agent-specific attack patterns across your codebase -- before they reach production.
+
+![CLI Demo](docs/demo.gif)
+
+## Quick Start
+
+```bash
+# 1. Install
+npm install @empowered-humanity/agent-security
+
+# 2. Scan
+npx @empowered-humanity/agent-security scan ./my-agent
+
+# 3. Review findings in your terminal, or export SARIF for GitHub Code Scanning
+npx @empowered-humanity/agent-security scan ./my-agent --format sarif --output results.sarif
+```
+
+## How It Compares
+
+| Capability | **agent-security** | Semgrep (LLM rules) | Garak (NVIDIA) | LLM Guard (Protect AI) |
+|---|---|---|---|---|
+| **Focus** | Static analysis of AI agent code & prompts | General-purpose SAST with some AI/LLM rules | Runtime red-teaming of live LLM endpoints | Runtime input/output guardrails for LLM apps |
+| **AI agent-specific patterns** | 190 | Limited (general injection rules; no agent-specific categories) | N/A (probes live models, not source code) | N/A (runtime scanner, not static analysis) |
+| **OWASP Agentic Top 10 (ASI01-ASI10)** | All 10 categories, 65 patterns | Not covered | Not covered (maps to OWASP LLM Top 10, not Agentic) | Not covered |
+| **MCP security patterns** | 44 patterns (SlowMist checklist) | N/A | N/A | N/A |
+| **SARIF output** | Yes (v2.1.0, GitHub Code Scanning) | Yes | No (JSON/HTML reports) | No |
+| **GitHub Action** | Yes (built-in `action.yml`) | Yes (`semgrep/semgrep-action`) | No | No |
+| **pre-commit hook** | Yes (built-in `.pre-commit-hooks.yaml`) | Yes | No | No |
+| **CWE mappings** | Yes (30+ categories mapped) | Yes | Limited (references CWE-1426 for prompt injection) | No |
+| **Taint analysis** | Yes (proximity-based) | Yes (cross-file dataflow in Pro) | No | No |
+| **Free / open-source** | Yes (MIT) | Community edition free; Pro is paid | Yes (Apache 2.0) | Yes (MIT) |
+
+**When to use each tool:**
+
+- **agent-security** -- You are building an AI agent (MCP servers, multi-agent systems, RAG pipelines, LLM-powered tools) and need to catch vulnerabilities in your code, configs, and prompts before deployment.
+- **Semgrep** -- You need general-purpose SAST across your full application stack (not agent-specific).
+- **Garak** -- You want to red-team a live LLM endpoint by sending adversarial probes and measuring model responses.
+- **LLM Guard** -- You need runtime input/output filtering to sanitize prompts and responses in production.
+
+These tools are complementary. Use agent-security in CI to catch static vulnerabilities, Garak to probe your deployed model, and LLM Guard as a runtime guardrail.
 
 ## What It Detects
 
@@ -78,12 +117,40 @@ The scanner implements detection for all 10 OWASP Agentic Security Issues:
 npm install @empowered-humanity/agent-security
 ```
 
-## Quick Start
+## CLI Usage
 
 ### Scan a Codebase
 
 ```bash
 npx @empowered-humanity/agent-security scan ./my-agent
+```
+
+### Common Options
+
+```bash
+# Set minimum severity threshold
+npx @empowered-humanity/agent-security scan . --severity high
+
+# Export as SARIF for GitHub Code Scanning
+npx @empowered-humanity/agent-security scan . --format sarif --output results.sarif
+
+# Export as JSON
+npx @empowered-humanity/agent-security scan . --format json --output results.json
+
+# Fail CI if critical findings exist
+npx @empowered-humanity/agent-security scan . --fail-on critical
+
+# Filter by OWASP ASI category
+npx @empowered-humanity/agent-security scan . --asi ASI06
+
+# Group findings by classification
+npx @empowered-humanity/agent-security scan . --group classification
+
+# List all patterns
+npx @empowered-humanity/agent-security patterns
+
+# Show statistics
+npx @empowered-humanity/agent-security stats
 ```
 
 ### Scan from Node.js
@@ -124,26 +191,69 @@ te-agent-security scan ./my-agent --group classification
 ```
 
 ### Test File Severity Downgrade
-Findings in test/fixture/example/payload directories are automatically severity-downgraded (critical→high, high→medium) since they represent lower risk.
+Findings in test/fixture/example/payload directories are automatically severity-downgraded (critical->high, high->medium) since they represent lower risk.
 
 ### Taint Proximity Analysis
 For dangerous sinks (eval, exec, pickle), the scanner checks whether user input sources (input(), request, argv, LLM .invoke()) are within 10 lines. Direct taint escalates severity to critical.
 
 ### Context Flow Tracing
-Detects when serialized conversation context (JSON.stringify of messages/history) flows to external API calls — a novel agent-specific attack surface.
+Detects when serialized conversation context (JSON.stringify of messages/history) flows to external API calls -- a novel agent-specific attack surface.
 
 ```javascript
 // Each finding includes intelligence data:
 finding.classification    // 'live_vulnerability' | 'test_payload' | ...
 finding.isTestFile        // true if in test/fixture/example directory
 finding.taintProximity    // 'direct' | 'nearby' | 'distant'
-finding.contextFlowChain  // serialization → external call chain
+finding.contextFlowChain  // serialization -> external call chain
 finding.severityDowngraded // true if test file downgrade applied
 ```
 
+## GitHub Action
+
+Use the built-in `action.yml` to add agent security scanning to any GitHub repository:
+
+```yaml
+name: Agent Security Scan
+
+on: [pull_request]
+
+jobs:
+  agent-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: empowered-humanity/agent-security@v1
+        with:
+          path: '.'
+          severity: 'medium'
+          fail-on-findings: 'high'
+          upload-sarif: 'true'
+```
+
+### Action Inputs
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `path` | `.` | Path to scan |
+| `severity` | `medium` | Minimum severity to report (`critical`, `high`, `medium`, `low`) |
+| `format` | `sarif` | Output format (`console`, `json`, `sarif`) |
+| `fail-on-findings` | `high` | Fail if findings at or above this severity |
+| `upload-sarif` | `true` | Upload SARIF results to GitHub Code Scanning |
+
+### Action Outputs
+
+| Output | Description |
+|--------|-------------|
+| `findings-count` | Total number of findings |
+| `risk-level` | Overall risk level |
+| `sarif-file` | Path to SARIF output file |
+
+When `upload-sarif` is enabled, findings appear directly in the GitHub Security tab under Code Scanning alerts.
+
 ## CI/CD Integration
 
-### GitHub Actions
+### GitHub Actions (inline)
 
 ```yaml
 name: Agent Security Scan
@@ -163,7 +273,17 @@ jobs:
 
 ### Pre-commit Hook
 
-Add to `.git/hooks/pre-commit`:
+Add to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/empowered-humanity/agent-security
+    rev: v1.2.0
+    hooks:
+      - id: agent-security-scan
+```
+
+Or add directly to `.git/hooks/pre-commit`:
 
 ```bash
 #!/bin/bash
@@ -295,6 +415,17 @@ consoleReporter.report(result);
 // JSON output for CI/CD
 const jsonReporter = new JsonReporter();
 const json = jsonReporter.report(result);
+```
+
+### SARIF Reporter
+
+```typescript
+import { formatAsSarif } from '@empowered-humanity/agent-security/reporters';
+
+// Generate SARIF 2.1.0 output with CWE mappings
+const sarifJson = formatAsSarif(result, process.cwd());
+
+// Upload to GitHub Code Scanning, or integrate with any SARIF-compatible tool
 ```
 
 ## Examples
