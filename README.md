@@ -4,10 +4,11 @@
 [![npm version](https://img.shields.io/npm/v/@empowered-humanity/agent-security)](https://www.npmjs.com/package/@empowered-humanity/agent-security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-126%20passing-brightgreen.svg)]()
-[![Patterns](https://img.shields.io/badge/Patterns-190-navy.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-254%20passing-brightgreen.svg)]()
+[![Patterns](https://img.shields.io/badge/Patterns-220-navy.svg)]()
+[![Guards](https://img.shields.io/badge/Runtime%20Guards-5-orange.svg)]()
 
-Static analysis security scanner purpose-built for AI agent architectures. Detects prompt injection, credential exposure, MCP server misconfigurations, code injection, and agent-specific attack patterns across your codebase -- before they reach production.
+Static analysis security scanner **and runtime security library** purpose-built for AI agent architectures. Detects prompt injection, credential exposure, MCP server misconfigurations, code injection, and agent-specific attack patterns across your codebase -- before they reach production. Runtime guard modules provide SSRF protection, path traversal prevention, exec allowlisting, download enforcement, and webhook verification.
 
 ![CLI Demo](docs/demo.gif)
 
@@ -29,7 +30,7 @@ npx @empowered-humanity/agent-security scan ./my-agent --format sarif --output r
 | Capability | **agent-security** | Semgrep (LLM rules) | Garak (NVIDIA) | LLM Guard (Protect AI) |
 |---|---|---|---|---|
 | **Focus** | Static analysis of AI agent code & prompts | General-purpose SAST with some AI/LLM rules | Runtime red-teaming of live LLM endpoints | Runtime input/output guardrails for LLM apps |
-| **AI agent-specific patterns** | 190 | Limited (general injection rules; no agent-specific categories) | N/A (probes live models, not source code) | N/A (runtime scanner, not static analysis) |
+| **AI agent-specific patterns** | 220 | Limited (general injection rules; no agent-specific categories) | N/A (probes live models, not source code) | N/A (runtime scanner, not static analysis) |
 | **OWASP Agentic Top 10 (ASI01-ASI10)** | All 10 categories, 65 patterns | Not covered | Not covered (maps to OWASP LLM Top 10, not Agentic) | Not covered |
 | **MCP security patterns** | 44 patterns (SlowMist checklist) | N/A | N/A | N/A |
 | **SARIF output** | Yes (v2.1.0, GitHub Code Scanning) | Yes | No (JSON/HTML reports) | No |
@@ -50,7 +51,7 @@ These tools are complementary. Use agent-security in CI to catch static vulnerab
 
 ## What It Detects
 
-**190 detection patterns** across 5 scanner categories:
+**220 detection patterns** across 7 scanner categories:
 
 ### 1. Prompt Injection (34 patterns)
 - Instruction override attempts
@@ -93,6 +94,76 @@ These tools are complementary. Use agent-security in CI to catch static vulnerab
 - **Supply Chain**: Unsigned plugins, dependency wildcards, untrusted registries
 - **Multi-MCP**: Cross-server calls, function priority override, server impersonation
 - **Prompt Security**: Init prompt poisoning, hidden context tags, resource-embedded instructions
+
+### 6. Infrastructure Attacks (18 patterns) — NEW in v2.0
+- **Environment Injection**: LD_PRELOAD, DYLD_INSERT_LIBRARIES, PATH override
+- **Symlink Traversal**: Symlink creation outside sandbox, missing lstat checks
+- **Windows Exec Evasion**: cmd.exe command chaining, PowerShell -EncodedCommand
+- **Network Misconfig**: Missing fetch timeouts, missing body size limits, no content-length checks
+- **Extended SSRF**: Link-local (169.254.x.x), CGNAT (100.64.x.x), IPv6-mapped, IPv6 loopback
+- **Bind/Proxy Misconfig**: 0.0.0.0 binding, unvalidated X-Forwarded-For headers
+
+### 7. Supply Chain & Auth (12 patterns) — NEW in v2.0
+- **Supply Chain Install**: curl|sh in docs, wget pipe-to-shell, PowerShell download-execute, password-protected archives
+- **Container Misconfig**: Home directory mounts, root filesystem mounts, seccomp/apparmor unconfined
+- **Auth Anti-Patterns**: Fail-open catch blocks, string "undefined" comparison, partial identity matching
+- **Timing Attacks**: Non-constant-time secret/token/HMAC comparison
+
+## Runtime Guard Modules — NEW in v2.0
+
+Five importable security modules for runtime protection:
+
+```typescript
+import { createSsrfGuard } from '@empowered-humanity/agent-security/guards/ssrf';
+import { createDownloadGuard } from '@empowered-humanity/agent-security/guards/download';
+import { createExecAllowlist } from '@empowered-humanity/agent-security/guards/exec-allow';
+import { openFileWithinRoot } from '@empowered-humanity/agent-security/guards/fs-safe';
+import { verifyGitHubWebhook } from '@empowered-humanity/agent-security/guards/webhook';
+```
+
+### SSRF Guard
+Prevents Server-Side Request Forgery with DNS pinning, IP blocklists (RFC 1918, loopback, link-local, CGNAT, IPv6), and hostname validation.
+
+```typescript
+const guard = createSsrfGuard({ allowedHostnames: ['api.github.com'] });
+const result = await guard.validateUrl(userProvidedUrl);
+if (!result.safe) throw new Error(`SSRF blocked: ${result.reason}`);
+```
+
+### Download Guard
+Enforces size caps, connection/response timeouts, and content-type validation on HTTP fetches.
+
+```typescript
+const guard = createDownloadGuard({ maxBodyBytes: 5 * 1024 * 1024, responseTimeoutMs: 15_000 });
+const result = await guard.fetch(url);
+if (!result.ok) throw new Error(result.reason);
+```
+
+### Exec Allowlist
+Default-deny command execution with binary path resolution, env var filtering (LD_PRELOAD, DYLD_*), and platform-specific evasion detection.
+
+```typescript
+const guard = createExecAllowlist({ securityLevel: 'allowlist', customAllowlist: ['nmap'] });
+const decision = guard.canExecute('nmap', ['-sV', 'target']);
+if (!decision.allowed) throw new Error(decision.reason);
+```
+
+### Path Traversal Validator
+TOCTOU-safe file access within a root boundary with symlink validation and inode verification.
+
+```typescript
+const handle = await openFileWithinRoot('/sandbox', 'data/config.json');
+const content = await handle.readFile('utf-8');
+await handle.close();
+```
+
+### Webhook Verifier
+Timing-safe HMAC verification for GitHub, Slack, Stripe, and custom webhooks. All comparisons use `crypto.timingSafeEqual()`.
+
+```typescript
+const result = verifyGitHubWebhook(payload, req.headers['x-hub-signature-256'], SECRET);
+if (!result.valid) return res.status(401).json({ error: result.reason });
+```
 
 ## OWASP ASI Alignment
 
@@ -223,7 +294,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: empowered-humanity/agent-security@v1
+      - uses: empowered-humanity/agent-security@v2
         with:
           path: '.'
           severity: 'medium'
@@ -278,7 +349,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/empowered-humanity/agent-security
-    rev: v1.2.0
+    rev: v2.0.0
     hooks:
       - id: agent-security-scan
 ```
@@ -303,7 +374,7 @@ security_scan:
 
 ## Pattern Categories
 
-The 190 patterns are organized into these categories:
+The 220 patterns are organized into these categories:
 
 | Category | Count | Severity |
 |----------|-------|----------|
@@ -332,7 +403,12 @@ The 190 patterns are organized into these categories:
 | MCP Multi-Server | 3 | Critical |
 | MCP Prompt Security | 4 | Critical |
 | MCP Data Security | 4 | High |
-| *24 other categories* | 28 | Varies |
+| Env Injection | 4 | Critical |
+| Supply Chain Install | 4 | Critical/High |
+| Container Misconfig | 4 | Critical |
+| Timing Attack | 1 | High |
+| Path Traversal | 3 | High/Medium |
+| *20 other categories* | 20 | Varies |
 
 ## Pattern Sources
 
@@ -348,6 +424,9 @@ Detection patterns compiled from 19+ authoritative research sources:
 - VND-005: Vendor security advisories
 - CMP-002: Company security research
 - SLOWMIST-MCP: SlowMist MCP Security Checklist (44 patterns across 9 categories)
+- OPENCLAW-CAT1-8: OpenClaw vulnerability catalog (80+ security commits across 12 categories)
+- CLAWHAVOC: ClawHavoc supply chain campaign analysis (341 malicious skills)
+- GEMINI-OPENCLAW: Gemini deep research (45 sources, 8 CVEs)
 
 ## Risk Scoring
 

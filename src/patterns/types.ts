@@ -80,6 +80,11 @@ export type AttackCategory =
   // Config issues
   | 'config_vulnerability'
   | 'permission_escalation'
+  // Infrastructure (OpenClaw research)
+  | 'env_injection'           // LD_PRELOAD, DYLD_*, PATH override
+  | 'timing_attack'           // Non-constant-time secret comparison
+  | 'container_misconfig'     // Docker/K8s security misconfigurations
+  | 'supply_chain_install'    // Malicious install instructions in docs/READMEs
   // Other
   | 'behavior_manipulation'
   | 'platform_specific'
@@ -109,6 +114,17 @@ export type SourceId =
   | 'VND-005'
   | 'CMP-002'
   | 'SLOWMIST-MCP'
+  // OpenClaw vulnerability catalog (80+ commits, 12 categories)
+  | 'OPENCLAW-CAT1'   // Path traversal / LFI (7 vulns)
+  | 'OPENCLAW-CAT2'   // SSRF (5 vulns)
+  | 'OPENCLAW-CAT3'   // Exec / sandbox escape (8 vulns)
+  | 'OPENCLAW-CAT4'   // Auth / access control (10 vulns)
+  | 'OPENCLAW-CAT6'   // DoS / CWE-400 (4 vulns)
+  | 'OPENCLAW-CAT8'   // Timing attacks (2 vulns)
+  | 'OPENCLAW-CAT11'  // Tool / plugin security (5 vulns)
+  // Supply chain / external research
+  | 'CLAWHAVOC'       // ClawHavoc supply chain campaign (341 malicious skills)
+  | 'GEMINI-OPENCLAW' // Gemini deep research (45 sources, 8 CVEs)
   | 'custom';
 
 /**

@@ -272,6 +272,69 @@ export const dangerousCommandPatterns: DetectionPattern[] = [
 ];
 
 /**
+ * Auth Anti-Patterns
+ * Dangerous coding patterns in authentication/authorization logic
+ * that create fail-open vulnerabilities.
+ *
+ * Source: OpenClaw Category 4 — Auth / Access Control (10 vulns)
+ */
+export const authAntiPatterns: DetectionPattern[] = [
+  {
+    name: 'auth_fail_open_catch',
+    pattern: /catch\s*\([^)]*\)\s*\{?\s*(?:return\s+true|allow\s*\(|granted|authorized|authenticated\s*=\s*true)/i,
+    severity: 'critical',
+    category: 'config_vulnerability',
+    source: 'OPENCLAW-CAT4',
+    context: 'code',
+    description: 'Fail-open catch block in auth — exceptions grant access instead of denying',
+    example: 'catch (e) { return true; // fail open! }',
+    remediation: 'Always fail closed: catch blocks in auth code must deny access. Return false/throw on exception.',
+  },
+  {
+    name: 'auth_string_undefined',
+    pattern: /===?\s*["']undefined["']|["']undefined["']\s*===?/i,
+    severity: 'critical',
+    category: 'config_vulnerability',
+    source: 'OPENCLAW-CAT4',
+    context: 'code',
+    description: 'Comparison with string "undefined" — JS undefined-to-string coercion bypass',
+    example: 'if (token === "undefined") // authenticates with literal string!',
+    remediation: 'Check for actual undefined/null, not the string "undefined". Use strict validation.',
+  },
+  {
+    name: 'auth_partial_identity_match',
+    pattern: /(?:userId|username|email|identity|sender|mxid|jid)\w*\.(?:startsWith|includes|indexOf)\s*\(/i,
+    severity: 'high',
+    category: 'config_vulnerability',
+    source: 'OPENCLAW-CAT4',
+    context: 'code',
+    description: 'Partial/prefix match on identity — @bob matches @bobby',
+    example: 'if (allowlist.some(id => sender.startsWith(id)))',
+    remediation: 'Use exact matching (===) for identity checks. Never use startsWith/includes for auth.',
+  },
+];
+
+/**
+ * Timing Attack Patterns
+ * Non-constant-time comparison of secrets.
+ *
+ * Source: OpenClaw Category 8 — Timing Attacks (2 vulns)
+ */
+export const timingAttackPatterns: DetectionPattern[] = [
+  {
+    name: 'timing_unsafe_secret_compare',
+    pattern: /(?:secret|token|signature|hmac|hash|digest|key|password|apiKey|api_key)\w*\s*(?:===?|!==?)\s*(?:\w+|["'])/i,
+    severity: 'high',
+    category: 'timing_attack',
+    source: 'OPENCLAW-CAT8',
+    context: 'code',
+    description: 'Non-constant-time comparison of secret/token/HMAC — vulnerable to timing attack',
+    example: 'if (signature === expectedSignature) // timing leak!',
+    remediation: 'Use crypto.timingSafeEqual() for all secret/HMAC/signature comparisons.',
+  },
+];
+
+/**
  * All RCE-related patterns combined
  */
 export const allRcePatterns: DetectionPattern[] = [
@@ -281,4 +344,6 @@ export const allRcePatterns: DetectionPattern[] = [
   ...codeInjectionPatterns,
   ...langchainPatterns,
   ...dangerousCommandPatterns,
+  ...authAntiPatterns,
+  ...timingAttackPatterns,
 ];

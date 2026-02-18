@@ -132,6 +132,7 @@ const CREDENTIAL_CATEGORIES = new Set([
 
 const CONFIG_CATEGORIES = new Set([
   'config_vulnerability', 'permission_escalation',
+  'container_misconfig', 'timing_attack',
 ]);
 
 const ARCHITECTURAL_CATEGORIES = new Set([
@@ -144,6 +145,8 @@ const ARCHITECTURAL_CATEGORIES = new Set([
 const SUPPLY_CHAIN_PATTERNS = new Set([
   'mcp_version_unpinned', 'mcp_dependency_wildcard', 'mcp_unsigned_plugin',
   'mcp_install_untrusted_registry', 'mcp_no_tool_integrity_check',
+  'readme_curl_pipe_sh', 'readme_wget_pipe_sh', 'readme_powershell_download',
+  'readme_password_protected_archive',
 ]);
 
 export function classifyFinding(finding: Finding): FindingClassification {
@@ -182,7 +185,7 @@ export function classifyFinding(finding: Finding): FindingClassification {
   // Code execution patterns
   if (pattern.category === 'code_injection' || pattern.category === 'argument_injection' ||
       pattern.category === 'ssrf' || pattern.category === 'ASI05_rce' ||
-      pattern.category === 'dangerous_commands') {
+      pattern.category === 'dangerous_commands' || pattern.category === 'env_injection') {
     return inTestFile ? 'test_payload' : 'live_vulnerability';
   }
 

@@ -117,7 +117,7 @@ export function formatRiskScore(result: ScanResult): string {
   let output = chalk.bold('\n📊 Risk Assessment\n');
   output += `${chalk.gray('═'.repeat(40))}\n`;
   output += `Risk Score: ${levelColor(`${riskScore.total}/100`)} (${levelColor(riskScore.level.toUpperCase())})\n`;
-  output += `OWASP Compliance: ${riskScore.owaspCompliance >= 80 ? chalk.green : chalk.red}(${riskScore.owaspCompliance}%)\n\n`;
+  output += `OWASP Compliance: ${(riskScore.owaspCompliance >= 80 ? chalk.green : chalk.red)(`${riskScore.owaspCompliance}%`)}\n\n`;
 
   output += chalk.bold('Findings by Severity:\n');
   output += `  ${SEVERITY_ICONS.critical} Critical: ${chalk.red.bold(riskScore.counts.critical.toString())}\n`;
@@ -159,10 +159,8 @@ export function formatIntelligenceSummary(findings: Finding[]): string {
     const distant = tainted.filter(f => f.taintProximity === 'distant').length;
 
     output += chalk.bold('\nTaint Proximity:\n');
-    output += `  ${direct > 0 ? chalk.red.bold : chalk.gray}(`
-      + `Direct (same line):  ${direct})\n`;
-    output += `  ${nearby > 0 ? chalk.red.bold : chalk.gray}(`
-      + `Nearby (10 lines):   ${nearby})\n`;
+    output += `  ${(direct > 0 ? chalk.red.bold : chalk.gray)(`Direct (same line):  ${direct}`)}\n`;
+    output += `  ${(nearby > 0 ? chalk.red.bold : chalk.gray)(`Nearby (10 lines):   ${nearby}`)}\n`;
     output += `  ${chalk.gray(`Distant (no input):  ${distant}`)}\n`;
   }
 

@@ -25,6 +25,7 @@ export * from './owasp-asi.js';
 export * from './credentials.js';
 export * from './defense-evasion.js';
 export * from './mcp-checklist.js';
+export * from './infrastructure.js';
 
 // Import all patterns for combined export
 import { allInjectionPatterns } from './injection.js';
@@ -34,6 +35,7 @@ import { allOwaspAsiPatterns } from './owasp-asi.js';
 import { allCredentialPatterns } from './credentials.js';
 import { allDefenseEvasionPatterns } from './defense-evasion.js';
 import { allMcpChecklistPatterns } from './mcp-checklist.js';
+import { allInfrastructurePatterns } from './infrastructure.js';
 
 import type { DetectionPattern, AttackCategory, Severity } from './types.js';
 
@@ -48,6 +50,7 @@ export const ALL_PATTERNS: DetectionPattern[] = [
   ...allCredentialPatterns,
   ...allDefenseEvasionPatterns,
   ...allMcpChecklistPatterns,
+  ...allInfrastructurePatterns,
 ];
 
 /**
@@ -147,4 +150,5 @@ export {
   allCredentialPatterns,
   allDefenseEvasionPatterns,
   allMcpChecklistPatterns,
+  allInfrastructurePatterns,
 };

@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:a2adc748-b6b0-48b3-8130-7aa8fffae10c",
+  "serialNumber": "urn:uuid:13941ce2-1aea-4d79-8529-95cdcbc44efd",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-02-12T19:27:36.890Z",
+    "timestamp": "2026-02-18T05:09:18.699Z",
     "tools": [
       {
         "name": "agent-security-sbom-generator",
@@ -14,8 +14,8 @@
     "component": {
       "type": "application",
       "name": "@empowered-humanity/agent-security",
-      "version": "1.1.0",
-      "description": "Security scanner for AI agent architectures - 176 detection patterns for prompt injection, credential exposure, MCP security, and OWASP ASI vulnerabilities",
+      "version": "2.0.0",
+      "description": "Security scanner for AI agent architectures - 220+ detection patterns and 5 runtime guard modules for prompt injection, SSRF, path traversal, credential exposure, MCP security, and OWASP ASI vulnerabilities",
       "licenses": [
         {
           "license": {
@@ -23,7 +23,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40empowered-humanity/agent-security@1.1.0"
+      "purl": "pkg:npm/%40empowered-humanity/agent-security@2.0.0"
     }
   },
   "components": [

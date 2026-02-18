@@ -1,7 +1,7 @@
 {
   "name": "@empowered-humanity/agent-security",
-  "version": "1.2.0",
-  "description": "Security scanner for AI agent architectures - 190 detection patterns for prompt injection, credential exposure, MCP security, and OWASP ASI vulnerabilities",
+  "version": "2.0.0",
+  "description": "Security scanner for AI agent architectures - 220+ detection patterns and 5 runtime guard modules for prompt injection, SSRF, path traversal, credential exposure, MCP security, and OWASP ASI vulnerabilities",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,6 +21,30 @@
     "./reporters": {
       "types": "./dist/reporters/index.d.ts",
       "default": "./dist/reporters/index.js"
+    },
+    "./guards": {
+      "types": "./dist/guards/index.d.ts",
+      "default": "./dist/guards/index.js"
+    },
+    "./guards/ssrf": {
+      "types": "./dist/guards/ssrf.d.ts",
+      "default": "./dist/guards/ssrf.js"
+    },
+    "./guards/download": {
+      "types": "./dist/guards/download.d.ts",
+      "default": "./dist/guards/download.js"
+    },
+    "./guards/exec-allow": {
+      "types": "./dist/guards/exec-allow.d.ts",
+      "default": "./dist/guards/exec-allow.js"
+    },
+    "./guards/fs-safe": {
+      "types": "./dist/guards/fs-safe.d.ts",
+      "default": "./dist/guards/fs-safe.js"
+    },
+    "./guards/webhook": {
+      "types": "./dist/guards/webhook.d.ts",
+      "default": "./dist/guards/webhook.js"
     }
   },
   "bin": {
@@ -63,7 +87,11 @@
     "vulnerability-scanner",
     "mcp",
     "mcp-security",
-    "taint-analysis"
+    "taint-analysis",
+    "ssrf",
+    "path-traversal",
+    "webhook-verification",
+    "runtime-security"
   ],
   "author": "Empowered Humanity <security@empoweredhumanity.ai>",
   "license": "MIT",
